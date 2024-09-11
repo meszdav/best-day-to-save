@@ -2,6 +2,8 @@ import datetime
 from typing import Tuple, Union
 import polars as pl
 
+from collections import namedtuple
+
 
 class SavingPlan:
     """Class to calculate the total worth of a saving plan.
@@ -73,7 +75,7 @@ class SavingPlan:
                 self.period == "max"
             ), "If using string the only available value is 'max'"
         else:
-            self.df = df.filter(
+            self.df = df.pipe(self.replace_timezone).filter(
                 pl.col("Date").is_between(
                     pl.lit(self.period[0]), pl.lit(self.period[1])
                 )
@@ -93,6 +95,10 @@ class SavingPlan:
         if self._result_df is None:
             self._result_df = self.get_result_df()
         return self.get_result_df()
+
+    def replace_timezone(self, df: pl.DataFrame) -> pl.DataFrame:
+        """Get rid of the timezone information"""
+        return df.with_columns(pl.col("Date").dt.replace_time_zone(None))
 
     def extract_year(self, col="Date"):
         return pl.col(col).dt.year().alias("year")
@@ -114,8 +120,6 @@ class SavingPlan:
             pl.when(
                 pl.lit(self.day_to_invest)
                 .lt(pl.col("Date").min().dt.day())
-                # .and_(pl.col("Date").min().dt.month().eq(pl.col("month")))
-                # .and_(pl.col("Date").min().dt.year().eq(pl.col("year")))
                 .and_(pl.lit(self.period[0]).dt.month().eq(pl.col("month")))
                 .and_(pl.lit(self.period[0]).dt.year().eq(pl.col("year")))
             )
@@ -193,7 +197,7 @@ class SavingPlan:
     def get_result_df(self) -> pl.DataFrame:
         prepared_df = self.get_prepared_df()
         return (
-            prepared_df.with_columns(self.get_diff)
+            prepared_df.pipe(self.get_diff)
             .pipe(self.get_filtered_df)
             .drop("year", "month", "day", "diff", "to_drop")
             .pipe(self.add_bought_stocks)
@@ -204,3 +208,63 @@ class SavingPlan:
 
     def get_total_worth(self):
         return self.result_df.sort("Date").select("total_worth").collect()[-1].item()
+
+
+#  function to get saving plans for a period of a time for each day of the month
+def get_saving_plans(
+    df: pl.DataFrame,
+    invest_amount: int,
+    period: Tuple[datetime.datetime, datetime.datetime],
+):
+    """Get saving plans for a period of time for each day of the month.
+
+    Parameters
+    ----------
+    df : pl.DataFrame
+        The DataFrame containing the stock data.
+    invest_amount : int
+        The amount of money to invest each month.
+    period : Tuple[datetime.datetime, datetime.datetime]
+        The period to consider for the calculations. It should contain two datetime objects.
+
+    Yields
+    ------
+    SavingPlan
+        A saving plan for each day of the month.
+    """
+
+    for day_to_invest in range(1, 32):
+        saving_plan = SavingPlan(df, invest_amount, day_to_invest, period)
+        yield saving_plan
+
+
+def get_time_periods(df: pl.DataFrame, period_years=15) -> pl.DataFrame:
+    """Get time periods of a fixed number of years."""
+
+    return (
+        (
+            df.filter(pl.col("Date").dt.date() < datetime.datetime(2009, 9, 4)).select(
+                pl.col("Date").alias("start"),
+                pl.col("Date").dt.offset_by(f"{period_years}y").alias("end"),
+            )
+        )
+        .collect()
+        .to_numpy()
+    )
+
+
+def simulate(df: pl.DataFrame, time_periods: tuple, invest_amount: int):
+    """Simulate the saving plans for each time period
+
+    Args:
+        df (pl.DataFrame): polars DataFrame
+        time_periods (tuple): _description_
+        invest_amount (int): _description_
+
+    Yields:
+        _type_: _description_
+    """
+    for period in time_periods:
+        for day in range(1, 32):
+            saving_plan = SavingPlan(df=df, invest_amount=invest_amount, day_to_invest=day, period=period)
+            yield saving_plan
