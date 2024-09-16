@@ -1,8 +1,14 @@
 import datetime
 from typing import Tuple, Union
 import polars as pl
+import calendar
 
 from collections import namedtuple
+import logging
+from pathlib import Path
+
+
+logger = logging.getLogger(__name__)
 
 
 class SavingPlan:
@@ -149,7 +155,7 @@ class SavingPlan:
         """
         prepared_df = (
             self.df.pipe(self.extract_dates)
-            .pipe(self.drop_first_month_if_needed)
+            # .pipe(self.drop_first_month_if_needed)
             .pipe(self.drop_last_month_if_needed)
         )
 
@@ -194,6 +200,11 @@ class SavingPlan:
     def add_day_to_invest(self, df: pl.DataFrame) -> pl.DataFrame:
         return df.with_columns(pl.lit(self.day_to_invest).alias("day_to_invest"))
 
+    def add_pct_chg(self, df: pl.DataFrame) -> pl.DataFrame:
+        return df.with_columns(
+            pct_chg=pl.col("Close").pct_change().mul(100)
+        ).with_columns(abs_pct_chg=pl.col("pct_chg").abs())
+
     def get_result_df(self) -> pl.DataFrame:
         prepared_df = self.get_prepared_df()
         return (
@@ -204,6 +215,7 @@ class SavingPlan:
             .pipe(self.add_all_stocks)
             .pipe(self.add_total_worth)
             .pipe(self.add_day_to_invest)
+            .pipe(self.add_pct_chg)
         )
 
     def get_total_worth(self):
@@ -266,5 +278,97 @@ def simulate(df: pl.DataFrame, time_periods: tuple, invest_amount: int):
     """
     for period in time_periods:
         for day in range(1, 32):
-            saving_plan = SavingPlan(df=df, invest_amount=invest_amount, day_to_invest=day, period=period)
+            saving_plan = SavingPlan(
+                df=df, invest_amount=invest_amount, day_to_invest=day, period=period
+            )
             yield saving_plan
+
+
+def write_simulation_result(
+    df: pl.DataFrame, time_periods: tuple, invest_amount: int, path: Path
+):
+    """Simulate the saving plans for each time period
+
+    Args:
+        df (pl.DataFrame): polars DataFrame
+        time_periods (tuple): _description_
+        invest_amount (int): _description_
+
+    Yields:
+        _type_: _description_
+    """
+    all_day_dfs = []
+    cnt = 0
+    for period in time_periods:
+
+        for day in range(1, 32):
+            saving_plan = SavingPlan(
+                df=df, invest_amount=invest_amount, day_to_invest=day, period=period
+            )
+            all_day_dfs.append(saving_plan.result_df)
+
+            if cnt % 5000 == 0:
+                logger.warning(f"Writing to parquet file: {cnt}")
+                pl.concat(all_day_dfs).collect().write_parquet(path / f"{str(cnt).zfill(4)}.parquet")
+                all_day_dfs = []
+            cnt += 1
+
+
+def get_last_day_of_month(year, month):
+    # monthrange returns a tuple (first_weekday, number_of_days)
+    last_day = calendar.monthrange(year, month)[1]
+    return last_day
+
+
+def get_all_possible_time_periods(
+    df: pl.DataFrame,
+    min_length: int = 20,
+    step: int = 3,
+):
+    """Get all possible time periods from the given data frame. Where the time periods
+    is a dynamic time window defined by the `min_length` and `step` parameters. The time
+    window is moved by the `step` parameter.
+
+    Args:
+        df (pl.DataFrame): The data frame.
+        min_length (int, optional): Minimum length of the time period. Defaults to 20.
+        step (int, optional): The step in months to move the time window. Defaults to 3.
+    """
+
+    p_df = df.collect()
+
+    min_date = p_df["Date"].dt.min()
+    min_year = min_date.year
+    min_month = min_date.month
+
+    max_date = p_df["Date"].dt.max()
+    max_year = max_date.year
+    max_month = max_date.month
+
+    all_year_month = []
+    for y in range(min_year, max_year + 1):
+        for m in range(1, 13):
+            if y == min_year and m < min_month:
+                continue
+            elif y == max_year and m > max_month:
+                continue
+            else:
+                all_year_month.append((y, m))
+
+    time_periods = []
+    for start in all_year_month[::step]:
+        for end in all_year_month[::step]:
+            length = (end[0] - start[0]) * 12 + end[1] - start[1]
+            length_in_years = length / 12
+
+            if length_in_years < min_length:
+                continue
+            else:
+                start_ = datetime.datetime(start[0], start[1], 1)
+
+                last_day = get_last_day_of_month(end[0], end[1])
+                end_ = datetime.datetime(end[0], end[1], last_day)
+
+                time_periods.append((start_, end_))
+
+    return time_periods

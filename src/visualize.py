@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import polars as pl
 import numpy as np
+from .saving_plan import get_saving_plans
 
 colors = [
     "#219ebc",
@@ -17,33 +18,67 @@ colors = [
     "#4cc9f0",
 ]
 
-pio.templates.default = "plotly_dark"
+template = "plotly_dark"
+
+pio.templates.default = template
+
+custom_template = {
+    "layout": {"colorway": colors},
+    "data": {
+        "histogram": [{"marker": {"line": {"color": "#252525", "width": 1}}}],
+        "bar": [{"marker": {"line": {"color": "#252525", "width": 1}}}],
+    },
+}
+
 
 # add colors to the template
-pio.templates[pio.templates.default].layout.update({"colorway": colors})
-
-# add fig.update_traces(marker_line_width=1, marker_line_color="#252525") to layout
-pio.templates[pio.templates.default].layout.update(
-    {
-        "marker": {"line": {"width": 1, "color": "#252525"}},
-    }
-)
+pio.templates[template].update(custom_template)
 
 
 def plot_total_worth(
-    total_worth_all: list,
-    title: str,
-    period: str,
+    df: pl.DataFrame, title: str, period: str, invest_amount: int = 10
 ):
+
+    saving_plans = get_saving_plans(df, period=period, invest_amount=invest_amount)
+
+    total_worhts = []
+    for saving_plan in saving_plans:
+        total_worhts.append(saving_plan.total_worth)
+
+    max_diff = (
+        (np.max(total_worhts) - np.min(total_worhts)) / np.min(total_worhts) * 100
+    )
 
     fig = go.Figure()
 
-    fig.add_trace(go.Bar(x=list(range(1, 32)), y=total_worth_all, name="Total Worth"))
+    fig.add_trace(go.Bar(x=list(range(1, 32)), y=total_worhts, name="Total Worth"))
+
+    # add best day with other color
+    best_day = np.argmax(total_worhts) + 1
+    fig.add_trace(
+        go.Bar(
+            x=[best_day],
+            y=[total_worhts[best_day - 1]],
+            name="Best Day",
+            marker_color=colors[2],
+        )
+    )
+
+    # add worst day with other color
+    worst_day = np.argmin(total_worhts) + 1
+    fig.add_trace(
+        go.Bar(
+            x=[worst_day],
+            y=[total_worhts[worst_day - 1]],
+            name="Worst Day",
+            marker_color=colors[1],
+        )
+    )
 
     # update range for y
     fig.update_yaxes(
         tickformat="$,.0f",
-        range=[np.min(total_worth_all) * 0.992, np.max(total_worth_all) * 1.002],
+        range=[np.min(total_worhts) * 0.992, np.max(total_worhts) * 1.002],
     )
 
     # show all ticks for x
@@ -58,28 +93,29 @@ def plot_total_worth(
     fig.update_layout(
         width=1000,
         height=500,
-        title=title + f" ({period})",
+        title=title + f" ({period})<br>Max diff: {np.round(max_diff, 1)}%",
         xaxis_title="Day of the Month",
         yaxis_title="Total Worth in USD",
         template="plotly_dark",
+        barmode="overlay",
     )
 
     # add a horizontal line for the total worth
     fig.add_hline(
-        y=np.max(total_worth_all),
+        y=np.max(total_worhts),
         line_dash="dash",
         line_color="red",
-        annotation_text=f"Max Total Worth: {np.max(total_worth_all):.2f}",
+        annotation_text=f"Max Total Worth: {np.max(total_worhts):.2f}",
         annotation_position="bottom right",
     )
 
     # add horizontal line for the worst day
-    worst_day = np.argmin(total_worth_all) + 1
+    worst_day = np.argmin(total_worhts) + 1
     fig.add_hline(
-        y=total_worth_all[worst_day - 1],
+        y=total_worhts[worst_day - 1],
         line_dash="dash",
         line_color="yellow",
-        annotation_text=f"Min Total Worth: {np.min(total_worth_all):.2f}",
+        annotation_text=f"Min Total Worth: {np.min(total_worhts):.2f}",
         annotation_position="top right",
     )
 
@@ -173,7 +209,6 @@ def plot_best_day_distribution(result_df: pl.DataFrame):
         .value_counts(name="num_occurences")
         .sort("day_to_invest")
     )
-    print(values)
 
     fig = px.bar(
         x=values["day_to_invest"].to_list(),
