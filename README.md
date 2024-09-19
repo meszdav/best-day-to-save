@@ -20,8 +20,9 @@ aliases:
   - [The importance of the end date](#the-importance-of-the-end-date)
 - [Visualizing the distribution of the differences between the best and worst day of the month](#visualizing-the-distribution-of-the-differences-between-the-best-and-worst-day-of-the-month)
 - [Day rank statistics](#day-rank-statistics)
+- [Conclusions](#conclusions)
 
-
+> **Disclaimer**: This project is for educational purposes only. The results are based on historical data and do not guarantee future performance. The project is not intended to provide financial advice. Always do your own research before making any investment decisions.
 
 # Inspiration
 
@@ -84,20 +85,24 @@ I find it quite interesting, that the shape of each scenario is almost the same.
 
 To make this perception statistically more relevant I calculated the saving plans from every first day of the month from 1972 to 31.08.2024. In this we have 624 different saving plans, with varying start, and length but always with the same end. 
 
+<a id="figure13"></a>
+
 ![13. figure](assets/saving_plan_same_end_all.png)
 
 The plot shows all the calculations with normalized results for each day of the month. This gives me the confidence to say that the start of the saving plan is not relevant to decide which day is the best or worst day to invest. The only thing which is significantly affecting the results is the end date. 
 
 With these findings the experimenting can be radically simplified, because no complete saving plans need to be simulated. Only the end dates needs to be used &rightarrow;  every day in a month can be used as the basis for the calculation. 
 
-But wait a minute what is the reason for this? Why is the end date so important, and the start date not?
+But wait a minute, what is the reason for this? Why is the end date so important, and the start date not?
 If we plot the best and worst day for the time period between 1972 and 2024, we can see on the following plots that there is no really a difference between the different days. 
 In these simulations every saving plan have been started on the 5th day of the month (blue) and on the 30th day of the month (orange). In the individual month there are some differences, in some cases quite big differences but on the long run the differences are equalized.
 
 | ![14. figure](assets/saving_plan_day_5_vs_30.png) | ![15. figure](assets/saving_plan_day_5_vs_30_zoomed.png) |
-| -------------------------------------------------- | -------------------------------------------------- |
+| ------------------------------------------------- | -------------------------------------------------------- |
 
  For this reason the start date is not as relevant as the end date. The differences are equalized on the long run. If we plot the distribution of the differences between the two days we get the following reulst:
+
+<a id="figure16"></a>
 
 ![16. figure](assets/saving_plan_day_5_vs_30_diff_dist.png)
 
@@ -109,10 +114,75 @@ Now we know that we can use just the individual months to get a better picture w
 
 With using the individual days of each available month we can calculate for each month the difference between the cheapest and the most expensive day.
 
+<a id="figure17"></a>
+
 ![17. figure](assets/monthly_diff_dist.png)
 
-Most of the differences in the past 50 years are between **3.25%** and **6.43%**.
+Most of the differences in the past 50 years are about between **3%** and **6%**.
+
+<a id="dayrankstat"></a>
 
 # Day rank statistics
 
-TBD.
+The day of the month is not really relevant on the long run, however I was still curious to see, which day is the best day statistically, ranking each day in every month.
+
+I ranked each day with the [dense ranking method](https://en.wikipedia.org/wiki/Ranking#Dense_ranking_(%221223%22_ranking)). My strategy was to rank the days with the exact same closing price with the same rank, and the following day would get the next rank. This was necessary because of the basic logic of the project. If a specific day of the month, such as a weekend, is unavailable, the plan will still proceed by using the next available day in the dataset. This approach simulates a real-world savings plan.
+
+The following plot shows the distribution of the ranks for each day of the month:
+
+<a id="figure18"></a>
+
+![18. figure](assets/rank_distribution_all_day.png)
+
+There is a noticeable pattern in the visualization. In the first half of the month, the ranks generally align with the day of the month. For example, the 1st day ranks near the top, and the 5th day ranks around 5th. This trend holds until about the 16th-17th day, where the dominant rank fades, and the ranks become more varied.
+
+From the 25th-26th onwards, a new pattern appears, with two dominant ranks—one high and one low—showing up. This suggests that these days tend to either perform very well or quite poorly. This dual-ranking trend continues through the rest of the month.
+
+
+The following table shows the statistics for each day of the month:
+
+|               | count | mean      | std      | min | 25% | 50%  | 75%  | max  |
+| ------------- | ----- | --------- | -------- | --- | --- | ---- | ---- | ---- |
+| day_to_invest |       |           |          |     |     |      |      |
+| 1             | 579.0 | 9.032815  | 7.077717 | 1.0 | 2.0 | 8.0  | 16.0 | 23.0 |
+| 2             | 579.0 | 9.373057  | 6.792197 | 1.0 | 3.0 | 8.0  | 16.0 | 23.0 |
+| 3             | 579.0 | 9.492228  | 6.534009 | 1.0 | 3.5 | 8.0  | 16.0 | 22.0 |
+| 4             | 579.0 | 9.683938  | 6.254017 | 1.0 | 4.0 | 9.0  | 15.0 | 22.0 |
+| 5             | 579.0 | 9.701209  | 5.990377 | 1.0 | 4.0 | 8.0  | 15.0 | 23.0 |
+| 6             | 579.0 | 9.777202  | 5.891208 | 1.0 | 4.0 | 9.0  | 15.0 | 23.0 |
+| 7             | 579.0 | 9.696028  | 5.834289 | 1.0 | 5.0 | 9.0  | 15.0 | 23.0 |
+| 8             | 579.0 | 9.713299  | 5.668221 | 1.0 | 5.0 | 9.0  | 15.0 | 23.0 |
+| 9             | 579.0 | 9.628670  | 5.374740 | 1.0 | 6.0 | 9.0  | 14.0 | 23.0 |
+| 10            | 579.0 | 9.452504  | 5.053596 | 1.0 | 6.0 | 9.0  | 13.0 | 22.0 |
+| 11            | 579.0 | 9.474957  | 4.885255 | 1.0 | 6.0 | 9.0  | 13.0 | 21.0 |
+| 12            | 579.0 | 9.670121  | 4.884123 | 1.0 | 6.0 | 9.0  | 13.0 | 22.0 |
+| 13            | 579.0 | 9.744387  | 4.774168 | 1.0 | 6.0 | 10.0 | 13.0 | 23.0 |
+| 14            | 579.0 | 10.103627 | 4.849247 | 1.0 | 6.0 | 10.0 | 14.0 | 23.0 |
+| 15            | 579.0 | 10.119171 | 4.920963 | 1.0 | 6.0 | 10.0 | 14.0 | 23.0 |
+| 16            | 579.0 | 10.316062 | 5.109385 | 1.0 | 6.0 | 10.0 | 14.0 | 23.0 |
+| 17            | 579.0 | 10.556131 | 5.170606 | 1.0 | 7.0 | 11.0 | 14.0 | 22.0 |
+| 18            | 579.0 | 10.777202 | 5.223427 | 1.0 | 7.0 | 11.0 | 14.0 | 22.0 |
+| 19            | 579.0 | 10.740933 | 5.267768 | 1.0 | 7.0 | 11.0 | 14.5 | 22.0 |
+| 20            | 579.0 | 10.734024 | 5.304082 | 1.0 | 7.0 | 11.0 | 15.0 | 22.0 |
+| 21            | 579.0 | 10.751295 | 5.479150 | 1.0 | 6.0 | 11.0 | 15.0 | 23.0 |
+| 22            | 579.0 | 10.816926 | 5.542318 | 1.0 | 7.0 | 11.0 | 16.0 | 22.0 |
+| 23            | 579.0 | 10.775475 | 5.727191 | 1.0 | 6.0 | 11.0 | 16.0 | 22.0 |
+| 24            | 579.0 | 10.863558 | 5.760536 | 1.0 | 6.0 | 11.0 | 16.0 | 22.0 |
+| 25            | 579.0 | 11.031088 | 5.992995 | 1.0 | 5.0 | 12.0 | 16.0 | 22.0 |
+| 26            | 579.0 | 11.158895 | 6.147183 | 1.0 | 5.0 | 12.0 | 17.0 | 22.0 |
+| 27            | 579.0 | 11.184801 | 6.341115 | 1.0 | 5.0 | 12.0 | 17.0 | 22.0 |
+| 28            | 579.0 | 11.343696 | 6.287600 | 1.0 | 5.0 | 12.0 | 17.0 | 23.0 |
+| 29            | 579.0 | 11.732297 | 6.464102 | 1.0 | 6.0 | 13.0 | 17.5 | 23.0 |
+| 30            | 579.0 | 11.813472 | 6.795309 | 1.0 | 6.0 | 13.0 | 18.0 | 23.0 |
+| 31            | 579.0 | 11.951641 | 6.845129 | 1.0 | 6.0 | 13.0 | 18.0 | 23.0 |
+
+# Conclusions
+
+With the [last analysis](#dayrankstat) basically my subjective perception was confirmed. The first days of the months tend to have higher stock prices than the following days. However the most important thing what I have learned, that this behavior does not effect the overall performance of the saving plan, because these differences are equalized on the long run.
+
+*Summary:*
+
+- The day of the month is not relevant for the outcome of the saving plan, the only thing which significantly affects the results is the end date. [(Figure 13)](#figure13).
+- The differences between the best and worst day of the month are between 3% and 6% [(Figure 17)](#figure17).
+- The differences between the best and worst day of the month are distributed almost normally around 0. [(Figure 16)](#figure16).
+- The day of the month is not relevant on the long run, however there is a noticeable pattern in the ranks of the days of the month [(Figure 18)](#figure18).

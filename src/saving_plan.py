@@ -3,7 +3,6 @@ from typing import Tuple, Union
 import polars as pl
 import calendar
 
-from collections import namedtuple
 import logging
 from pathlib import Path
 
@@ -309,7 +308,9 @@ def write_simulation_result(
 
             if cnt % 5000 == 0:
                 logger.warning(f"Writing to parquet file: {cnt}")
-                pl.concat(all_day_dfs).collect().write_parquet(path / f"{str(cnt).zfill(4)}.parquet")
+                pl.concat(all_day_dfs).collect().write_parquet(
+                    path / f"{str(cnt).zfill(4)}.parquet"
+                )
                 all_day_dfs = []
             cnt += 1
 
