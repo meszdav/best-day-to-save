@@ -41,7 +41,7 @@ My strategy was to check if the selected day is available, if not I am using the
  # Rules and assumptions:
  - The investment day is defined with a number between 1 and 31, which represents the day of the month.
  - If the selected day is not available in the given month, the next available day is used.
- - In case the day is greater than the last avaulable day in the month the last available day is used, **not** the first day of the next month.
+ - In case the day is greater than the last available day in the month the last available day is used, **not** the first day of the next month.
  - The investment is always 10$.
  - The investment is always made at the close price of the day.
 
@@ -70,8 +70,8 @@ Table for 5 scenarios:
 | 4        | Okt, 2000  | Okt, 2015 | 28       | 31        | 8.9%       | ![5. figure](assets/saving_plan_period_4.png) |
 | 5        | Jan, 2010  | Aug, 2024 | 23       | 3         | 9.1%       | ![6. figure](assets/saving_plan_period_5.png) |
 
-These results are very surprising for me, because the results are quite different. The best and worst day was in all cases different, and the order of the days seems to be random too. The difference between the best and worst day is between **4.6%** and **9.1%**. However the number of simlulated periods is not enough to make a general statement.
-The most suprising result for me was the the last scenario is basically the same as the first one. Obviously the total worths are different, but the shape of the graph, and the ratio between all the days are basically the same. 
+These results are very surprising for me, because the results are quite different. The best and worst day was in all cases different, and the order of the days seems to be random too. The difference between the best and worst day is between **4.6%** and **9.1%**. However the number of simulated periods is not enough to make a general statement.
+The most surprising result for me was the the last scenario is basically the same as the first one. Obviously the total worths are different, but the shape of the graph, and the ratio between all the days are basically the same. 
 
 Let`s see the results for 6 different scenarios, where the start of the saving plan is always different, but the end is always the same:
 
@@ -100,7 +100,7 @@ In these simulations every saving plan have been started on the 5th day of the m
 | ![14. figure](assets/saving_plan_day_5_vs_30.png) | ![15. figure](assets/saving_plan_day_5_vs_30_zoomed.png) |
 | ------------------------------------------------- | -------------------------------------------------------- |
 
- For this reason the start date is not as relevant as the end date. The differences are equalized on the long run. If we plot the distribution of the differences between the two days we get the following reulst:
+ For this reason the start date is not as relevant as the end date. The differences are equalized on the long run. If we plot the distribution of the differences between the two days we get the following results:
 
 <a id="figure16"></a>
 
