@@ -38,6 +38,17 @@ pio.templates[template].update(custom_template)
 def plot_total_worth(
     df: pl.DataFrame, title: str, period: str, invest_amount: int = 10
 ):
+    """Plot the total worth for every day of the month.
+
+    Args:
+        df (pl.DataFrame): pl.DataFrame with the data
+        title (str): Title of the plot
+        period (tuple): Tuple with the start and end date of the period
+        invest_amount (int, optional): Amount of the invested money in each month. Defaults to 10.
+
+    Returns:
+        go.Figure: Plotly figure
+    """
 
     saving_plans = get_saving_plans(df, period=period, invest_amount=invest_amount)
 
@@ -123,6 +134,8 @@ def plot_total_worth(
 
 
 def plot_max_diff_distribution(df: pl.DataFrame):
+    """Plot the distribution of the max total worth difference in % for every possible 15 year period."""
+
     if isinstance(df, pl.LazyFrame):
         df = df.collect()
 
