@@ -1,0 +1,4 @@
+
+You can use this dashboard to simulate historical saving plans with the MSCI World Index. 
+As you see the the chart is not really changing, with different parameters. To know more about this behavior, you can check my
+blog post [here](https://davidmeszaros.blog/posts/2024/09/best-day-to-invest/)
