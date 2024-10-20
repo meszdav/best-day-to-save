@@ -7,9 +7,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-sys.path.append("../src")
+sys.path.append("./")
 
-from saving_plan import SavingPlan, get_saving_plans
+from src.saving_plan import SavingPlan, get_saving_plans
 
 
 def main():
@@ -17,13 +17,13 @@ def main():
 
 
     # Load the data
-    df = pl.read_parquet("../data/msci_world_index.parquet").lazy()
+    df = pl.read_parquet("data/msci_world_index.parquet").lazy()
 
     st.title("Simulating Saving Plans with MSCI World Index")
 
     col1, col2 = st.columns([0.4, 0.7])
     with col1:
-        with open("description.txt", "r") as f:
+        with open("dashboard/description.txt", "r") as f:
             st.markdown(f.read())
 
     st.divider()
